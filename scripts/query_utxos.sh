@@ -16,10 +16,8 @@ if [ $# -gt 2 ]; then
     usage
 fi
 
-mkdir -p ${TEST_DIR} && cd ${TEST_DIR}
-
 process_vus_directory() {
-    local DIR="${VUS_PREFIX}-$1"
+    local DIR=$1
     cd ${DIR}
     echo ${DIR}
     
@@ -41,15 +39,17 @@ process_wallet_file() {
     echo --------------------------------------------------------------------------------------
 }
 
+mkdir -p ${TEST_DIR} && cd ${TEST_DIR}
+
 if ! [ -z "$VUS_ID" ]; then
     if [ -d "${VUS_PREFIX}-${VUS_ID}" ]; then
-        process_vus_directory "$VUS_ID"
+        process_vus_directory "${VUS_PREFIX}-${VUS_ID}"
     fi
 else
     if [ -n "$(find . -maxdepth 1 -type d -name "${VUS_PREFIX}-*")" ]; then
         if [ -z "$VUS_ID" ]; then
             for DIR in ${VUS_PREFIX}-*; do
-                process_vus_directory "${DIR#${VUS_PREFIX}-}"
+                process_vus_directory "${DIR}"
                 echo ""
             done
         fi

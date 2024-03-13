@@ -106,7 +106,7 @@ FEE=$(cardano-cli transaction calculate-min-fee \
 FEE_AMOUNT=$(echo ${FEE} | awk '{print $1}')
 
 # Amount
-AMOUNT_TO_SEND=10000000000
+AMOUNT_TO_SEND=100000000000
 # Sender sends fee
 SENDER_AMOUNT_TO_SEND=$FEE_AMOUNT+$AMOUNT_TO_SEND
 # Sender receive his change
