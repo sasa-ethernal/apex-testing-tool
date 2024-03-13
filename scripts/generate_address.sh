@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+TEST_DIR=test-data
+VUS_PREFIX=vus
+WALLET_PREFIX=wallet
+
 VUS_ID=$1
 WALLET_ID=$2
 
@@ -9,12 +13,10 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
-mkdir -p test-data
-cd test-data
-mkdir -p vus-${VUS_ID}
-cd vus-${VUS_ID}
+mkdir -p ${TEST_DIR} && cd ${TEST_DIR}
+mkdir -p ${VUS_PREFIX}-${VUS_ID} && cd ${VUS_PREFIX}-${VUS_ID}
 
-WALLET_NAME=wallet-${WALLET_ID}
+WALLET_NAME=${WALLET_PREFIX}-${WALLET_ID}
 
 # Generate address
 cardano-cli address key-gen \
