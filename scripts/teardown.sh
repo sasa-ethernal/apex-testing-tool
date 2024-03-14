@@ -42,9 +42,9 @@ if [ -n "$(find . -maxdepth 1 -type d -name "${VUS_PREFIX}-*")" ]; then
 fi
 cd ..
 
-# Call return_all_utxos script for each wallet
+# Call send_all_utxos script for each wallet
 for WALLET in "${WALLETS[@]}"
 do
     echo "${WALLET} -> ${DESTINATION}"
-    ./"${SCRIPTS_DIR}"/return_all_utxos.sh "$WALLET" "$DESTINATION"
+    ./"${SCRIPTS_DIR}"/send_all_utxos.sh "$WALLET" "$DESTINATION"
 done
