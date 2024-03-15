@@ -1,57 +1,61 @@
 #!/usr/bin/env bash
 
-ROOT_A=cluster/chain_A
-RELAY_A=cluster/relay
-SCRIPT_A=cardano-scripts/mkfiles_chain1.sh
-RUN_A=run/all.sh
+ROOT_DIR=test-data/local-cluster
+RELAY_DIR=local-testnet
+MKFILES_SCRIPT=cardano-scripts/mkfiles.sh
+RUN_CLUSTER=run/all.sh
 
 # Remove Chain_A data
-rm -rf ${ROOT_A}
-rm -rf ${RELAY_A}
+rm -rf ${ROOT_DIR}
+rm -rf ${RELAY_DIR}/genesis
+rm -rf ${RELAY_DIR}/config
 
-# execute mkfiles_A
-bash ${SCRIPT_A}
-sleep 3
+# Execute mkfiles script
+bash ${MKFILES_SCRIPT}
+sleep 1
 
-# create Relay dir..
-cd cluster
+# Relay-node data
+cd $RELAY_DIR
+mkdir config
+cd config
+mkdir ogmios
 mkdir relay
-cd relay
-mkdir db
 cd ../..
 
-cp -R ${ROOT_A}/genesis ${RELAY_A}
-cp ${ROOT_A}/configuration.yaml ${RELAY_A}
+cp -R ${ROOT_DIR}/genesis ${RELAY_DIR}
 
-cat > "${RELAY_A}/topology.json" <<EOF
+cp ${ROOT_DIR}/configuration.yaml ${RELAY_DIR}/config
+cat > "${RELAY_DIR}/config/topology.json" <<EOF
 {
-   "Producers": [
-     {
-       "addr": "127.0.0.1",
-       "port": 13001,
-       "valency": 1
-     }
-   ]
- }
+  "Producers": [
+    {
+      "addr": "host.docker.internal",
+      "port": 13001,
+      "valency": 1
+    }
+  ]
+}
 EOF
 
-cat > "scripts/start_relay.sh" <<EOF
-#!/bin/bash
-cardano-node run --topology ${RELAY_A}/topology.json --database-path ${RELAY_A}/db --host-addr 0.0.0.0 --port 6000 --config ${RELAY_A}/configuration.yaml --socket-path ${RELAY_A}/node.socket
-EOF
+sed -i "9s%.*%ByronGenesisFile: /genesis/byron/genesis.json%" "${RELAY_DIR}/config/configuration.yaml"
+sed -i "10s%.*%ShelleyGenesisFile: /genesis/shelley/genesis.json%" "${RELAY_DIR}/config/configuration.yaml"
+sed -i "11s%.*%AlonzoGenesisFile: /genesis/shelley/genesis.alonzo.json%" "${RELAY_DIR}/config/configuration.yaml"
+sed -i "12s%.*%ConwayGenesisFile: /genesis/shelley/genesis.conway.json%" "${RELAY_DIR}/config/configuration.yaml"
 
-chmod +x scripts/start_relay.sh
+cp ${RELAY_DIR}/config/configuration.yaml ${RELAY_DIR}/config/ogmios/configuration.yaml
+cp ${RELAY_DIR}/config/configuration.yaml ${RELAY_DIR}/config/relay/configuration.yaml
+cp ${RELAY_DIR}/config/topology.json ${RELAY_DIR}/config/ogmios/topology.json
+cp ${RELAY_DIR}/config/topology.json ${RELAY_DIR}/config/relay/topology.json
 
-# execute run_all.sh on A and B
-gnome-terminal -- bash ${ROOT_A}/${RUN_A}
+# Execute run_all script
+gnome-terminal -- bash ${ROOT_DIR}/${RUN_CLUSTER}
 sleep 10
 
-cd $ROOT_A/
+cd $ROOT_DIR/
 
 # Params
-MAGIC_NUMBER=142
-export CARDANO_NODE_SOCKET_PATH=node-spo1/node.sock
-CARDANO_NET_PREFIX="--testnet-magic ${MAGIC_NUMBER}"
+export CARDANO_NODE_SOCKET_PATH=node-spo1/node.socket
+CARDANO_NET_PREFIX="--testnet-magic 1177"
 PROTOCOL_PARAMETERS=protocol-parameters.json
 cardano-cli query protocol-parameters --out-file ${PROTOCOL_PARAMETERS} ${CARDANO_NET_PREFIX}
 
@@ -139,16 +143,10 @@ cardano-cli transaction submit \
 
 cd ../..
 
-sleep 3
-gnome-terminal -- ogmios \
-  --port 13000 \
-  --node-socket ${ROOT_A}/node-spo1/node.sock \
-  --node-config ${ROOT_A}/configuration.yaml
-
-mkdir ${RELAY_A}/keys/
-cp ${ROOT_A}/utxo-keys/user.addr ${RELAY_A}/keys/
-cp ${ROOT_A}/utxo-keys/user.skey ${RELAY_A}/keys/
-cp ${ROOT_A}/utxo-keys/user.vkey ${RELAY_A}/keys/
+mkdir -p test-data/local-keys/
+cp ${ROOT_DIR}/utxo-keys/user.addr test-data/local-keys/
+cp ${ROOT_DIR}/utxo-keys/user.skey test-data/local-keys/
+cp ${ROOT_DIR}/utxo-keys/user.vkey test-data/local-keys/
 
 
 

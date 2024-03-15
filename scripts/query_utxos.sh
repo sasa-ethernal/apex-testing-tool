@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
+DOCKER_RELAY_CONTAINER=$(docker ps --format "{{.Names}}" --filter "name=apex-relay")
+DOCKER_PREFIX="docker exec -it ${DOCKER_RELAY_CONTAINER}"
+
 TEST_DIR=test-data
 VUS_PREFIX=vus
 WALLET_PREFIX=wallet
 
-CARDANO_NET_PREFIX="--testnet-magic 142"
-SOCKET_PATH=cluster/chain_A/node-spo1/node.sock
+CARDANO_NET_PREFIX="--testnet-magic 1177"
+NODE_SOCKET_PREFIX="--socket-path /ipc/node.socket"
 
 VUS_ID="$1"
 WALLET_ID="$2"
@@ -35,7 +38,7 @@ process_vus_directory() {
 process_wallet_file() {
     local WALLET=$1
     echo "${WALLET} [$(cat ${WALLET})]"
-    echo "$(cardano-cli query utxo --address $(cat ${WALLET}) ${CARDANO_NET_PREFIX} --socket-path ../../${SOCKET_PATH})"
+    echo "$(${DOCKER_PREFIX} cardano-cli query utxo --address $(cat ${WALLET}) ${CARDANO_NET_PREFIX} ${NODE_SOCKET_PREFIX})"
     echo --------------------------------------------------------------------------------------
 }
 

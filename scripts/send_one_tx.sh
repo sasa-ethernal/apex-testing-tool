@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
+DOCKER_RELAY_CONTAINER=$(docker ps --format "{{.Names}}" --filter "name=apex-relay")
+DOCKER_PREFIX="docker exec -it ${DOCKER_RELAY_CONTAINER}"
+
 TEST_DIR=test-data
 TX_DIR=tx
 NODE_ROOT=cluster/chain_A
 POTENTIAL_FEE=200000
 
-CARDANO_NET_PREFIX="--testnet-magic 142"
-PROTOCOL_PARAMETERS=${NODE_ROOT}/protocol-parameters.json
-export CARDANO_NODE_SOCKET_PATH=${NODE_ROOT}/node-spo1/node.sock
+CARDANO_NET_PREFIX="--testnet-magic 1177"
+PROTOCOL_PARAMETERS=/ipc/protocol-parameters.json
+NODE_SOCKET_PREFIX="--socket-path /ipc/node.socket"
 
 SENDER_PATH=$1
 RECEIVER_PATH=$2
@@ -24,14 +27,14 @@ DESTINATION_ADDRESS=$(cat ${RECEIVER_PATH}.addr)
 
 mkdir -p ${TEST_DIR} && cd ${TEST_DIR} && mkdir -p ${TX_DIR} && cd ..
 TX_TIME=`date +%s`
-TX_FILE=test-data/tx/tx_${TX_TIME}_$(basename "$SENDER_PATH")_$(basename "$RECEIVER_PATH")_${AMOUNT}
+TX_FILE=${TEST_DIR}/${TX_DIR}/tx_${TX_TIME}_$(basename "$SENDER_PATH")_$(basename "$RECEIVER_PATH")_${AMOUNT}
 
 # Initialize tx parameters
 tx_amount=0
 tx_input_count=0
 tx_inputs=""
 
-UTXOS="$(cardano-cli query utxo --address ${SENDER_ADDRESS} ${CARDANO_NET_PREFIX})"
+UTXOS="$(${DOCKER_PREFIX} cardano-cli query utxo --address ${SENDER_ADDRESS} ${CARDANO_NET_PREFIX} ${NODE_SOCKET_PREFIX})"
 
 while IFS= read -r line; do
     tx_hash=$(echo "$line" | awk '{print $1}')
@@ -54,7 +57,7 @@ if [ $((tx_amount - POTENTIAL_FEE - AMOUNT)) -lt 0 ]; then
 fi
 
 # Build raw transaction
-cardano-cli transaction build-raw \
+${DOCKER_PREFIX} cardano-cli transaction build-raw \
     ${tx_inputs} \
     --tx-out $SENDER_ADDRESS+0 \
     --tx-out $DESTINATION_ADDRESS+0 \
@@ -63,7 +66,7 @@ cardano-cli transaction build-raw \
     --out-file ${TX_FILE}.draft
 
 # Calculate fee
-FEE=$(cardano-cli transaction calculate-min-fee \
+FEE=$(${DOCKER_PREFIX} cardano-cli transaction calculate-min-fee \
     --tx-body-file ${TX_FILE}.draft \
     --tx-in-count ${tx_input_count} \
     --tx-out-count 2 \
@@ -77,11 +80,11 @@ SENDER_AMOUNT_TO_RECEIVE=$((tx_amount - AMOUNT - FEE_AMOUNT))
 RECEIVER_AMOUNT_TO_RECEIVE=${AMOUNT}
 
 # Calculate expiration slot
-CURRENT_SLOT=$(cardano-cli query tip ${CARDANO_NET_PREFIX} | jq -r '.slot')
+CURRENT_SLOT=$(${DOCKER_PREFIX} cardano-cli query tip ${CARDANO_NET_PREFIX} ${NODE_SOCKET_PREFIX} | jq -r '.slot')
 EXPIRE=$((CURRENT_SLOT+300))
 
 # Build raw transaction again with correct amounts
-cardano-cli transaction build-raw \
+${DOCKER_PREFIX} cardano-cli transaction build-raw \
     ${tx_inputs} \
     --tx-out $SENDER_ADDRESS+$SENDER_AMOUNT_TO_RECEIVE \
     --tx-out $DESTINATION_ADDRESS+$RECEIVER_AMOUNT_TO_RECEIVE \
@@ -89,12 +92,13 @@ cardano-cli transaction build-raw \
     --fee $FEE_AMOUNT \
     --out-file ${TX_FILE}.draft
 
-cardano-cli transaction sign \
+${DOCKER_PREFIX} cardano-cli transaction sign \
     --signing-key-file ${SENDER_PATH}.skey \
     --tx-body-file ${TX_FILE}.draft \
     --out-file ${TX_FILE}.signed \
     ${CARDANO_NET_PREFIX}
 
-echo "$(cardano-cli transaction submit \
+echo "$(${DOCKER_PREFIX} cardano-cli transaction submit \
+    ${NODE_SOCKET_PREFIX} \
     --tx-file ${TX_FILE}.signed \
     ${CARDANO_NET_PREFIX})"

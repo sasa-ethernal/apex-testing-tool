@@ -32,13 +32,12 @@ case $UNAME in
 esac
 
 CARDANO_CLI="${CARDANO_CLI:-cardano-cli}"
-NETWORK_MAGIC=142
+NETWORK_MAGIC=1177
 SECURITY_PARAM=10
 NUM_SPO_NODES=3
 INIT_SUPPLY=12000000
 START_TIME="$(${DATE} -d "now + 10 seconds" +%s)"
-ROOT=cluster/chain_A
-#ROOT=example
+ROOT=test-data/local-cluster
 mkdir -p "${ROOT}"
 
 cat > "${ROOT}/byron.genesis.spec.json" <<EOF
@@ -83,7 +82,7 @@ $CARDANO_CLI byron genesis genesis \
 cp cardano-scripts/alonzo-babbage-test-genesis.json "${ROOT}/genesis.alonzo.spec.json"
 cp cardano-scripts/conway-babbage-test-genesis.json "${ROOT}/genesis.conway.spec.json"
 
-cp cardano-scripts/configuration1.yaml "${ROOT}/configuration.yaml"
+cp cardano-scripts/configuration.yaml "${ROOT}/configuration.yaml"
 $SED -i "${ROOT}/configuration.yaml" \
      -e 's/Protocol: RealPBFT/Protocol: Cardano/' \
      -e '/Protocol/ aPBftSignatureThreshold: 0.6' \
@@ -137,7 +136,7 @@ mv "${ROOT}/genesis.alonzo.json" "${ROOT}/genesis/shelley/genesis.alonzo.json"
 mv "${ROOT}/genesis.conway.json" "${ROOT}/genesis/shelley/genesis.conway.json"
 mv "${ROOT}/genesis.json" "${ROOT}/genesis/shelley/genesis.json"
 
-jq --raw-output '.protocolConsts.protocolMagic = 142' "${ROOT}/genesis/byron/genesis-wrong.json" > "${ROOT}/genesis/byron/genesis.json"
+jq --raw-output '.protocolConsts.protocolMagic = 1177' "${ROOT}/genesis/byron/genesis-wrong.json" > "${ROOT}/genesis/byron/genesis.json"
 
 rm "${ROOT}/genesis/byron/genesis-wrong.json"
 
@@ -170,8 +169,6 @@ mv "${ROOT}/byron-gen-command/delegate-keys.002.key" "${ROOT}/node-spo3/byron-de
 mv "${ROOT}/byron-gen-command/delegation-cert.000.json" "${ROOT}/node-spo1/byron-delegation.cert"
 mv "${ROOT}/byron-gen-command/delegation-cert.001.json" "${ROOT}/node-spo2/byron-delegation.cert"
 mv "${ROOT}/byron-gen-command/delegation-cert.002.json" "${ROOT}/node-spo3/byron-delegation.cert"
-
-
 
 echo 13001 > "${ROOT}/node-spo1/port"
 echo 13002 > "${ROOT}/node-spo2/port"
@@ -243,7 +240,7 @@ CARDANO_NODE="\${CARDANO_NODE:-cardano-node}"
   --config                          '${ROOT}/configuration.yaml' \\
   --topology                        '${ROOT}/${NODE}/topology.json' \\
   --database-path                   '${ROOT}/${NODE}/db' \\
-  --socket-path                     '$(sprocket "${ROOT}/${NODE}/node.sock")' \\
+  --socket-path                     '$(sprocket "${ROOT}/${NODE}/node.socket")' \\
   --shelley-kes-key                 '${ROOT}/${NODE}/kes.skey' \\
   --shelley-vrf-key                 '${ROOT}/${NODE}/vrf.skey' \\
   --byron-delegation-certificate    '${ROOT}/${NODE}/byron-delegation.cert' \\
@@ -271,6 +268,6 @@ echo "wait" >> "${ROOT}/run/all.sh"
 
 chmod a+x "${ROOT}/run/all.sh"
 
-echo "CARDANO_NODE_SOCKET_PATH=${ROOT}/node-spo1/node.sock "
+echo "CARDANO_NODE_SOCKET_PATH=${ROOT}/node-spo1/node.socket "
 
-(cd "$ROOT"; ln -s node-spo1/node.sock main.sock)
+(cd "$ROOT"; ln -s node-spo1/node.socket main.socket)
