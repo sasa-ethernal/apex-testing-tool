@@ -58,6 +58,8 @@ export CARDANO_NODE_SOCKET_PATH=node-spo1/node.socket
 CARDANO_NET_PREFIX="--testnet-magic 1177"
 PROTOCOL_PARAMETERS=protocol-parameters.json
 cardano-cli query protocol-parameters --out-file ${PROTOCOL_PARAMETERS} ${CARDANO_NET_PREFIX}
+mkdir ../node-ipc/
+cp ${PROTOCOL_PARAMETERS} ../node-ipc/${PROTOCOL_PARAMETERS}
 
 # Generate new keys for USER and BRIDGE
 for KEY in user bridge; do

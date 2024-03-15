@@ -33,3 +33,5 @@ ${DOCKER_PREFIX} cardano-cli address build \
     --out-file ${TEST_DIR}/${VUS_DIR}/${WALLET_NAME}.addr \
     ${CARDANO_NET_PREFIX}
 
+
+echo "Generated address ${TEST_DIR}/${VUS_PREFIX}-${VUS_ID}/${WALLET_PREFIX}-${WALLET_ID} (.vkey|.skey|.addr)"

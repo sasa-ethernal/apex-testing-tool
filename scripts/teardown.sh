@@ -45,6 +45,5 @@ cd ..
 # Call send_all_utxos script for each wallet
 for WALLET in "${WALLETS[@]}"
 do
-    echo "${WALLET} -> ${DESTINATION}"
     ./"${SCRIPTS_DIR}"/send_all_utxos.sh "$WALLET" "$DESTINATION"
 done

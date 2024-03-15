@@ -68,8 +68,8 @@ while IFS= read -r line; do
     fi
 done <<< "$(echo "${UTXOS}" | awk 'NR > 2')"
 
-if [ $((tx_amount - POTENTIAL_FEE - TOTAL_AMOUNT)) -lt 0 ]; then    
-    echo "Not enough funds"
+if [ $((tx_amount - POTENTIAL_FEE - TOTAL_AMOUNT)) -lt 0 ]; then
+    echo "Not enough funds."
     exit -1
 fi
 
@@ -94,6 +94,8 @@ FEE_AMOUNT=$(echo ${FEE} | awk '{print $1}')
 
 # Sender receive nothing
 SENDER_AMOUNT_TO_RECEIVE=$((tx_amount - TOTAL_AMOUNT - FEE_AMOUNT))
+
+echo "Sending [${TOTAL_AMOUNT}] ${SENDER_PATH} -> ${tx_output_count} addresses || CHANGE ${SENDER_AMOUNT_TO_RECEIVE}"
 
 # Calculate expiration slot
 CURRENT_SLOT=$(${DOCKER_PREFIX} cardano-cli query tip ${CARDANO_NET_PREFIX} ${NODE_SOCKET_PREFIX} | jq -r '.slot')

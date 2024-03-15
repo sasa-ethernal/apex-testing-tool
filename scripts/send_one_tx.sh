@@ -83,6 +83,8 @@ RECEIVER_AMOUNT_TO_RECEIVE=${AMOUNT}
 CURRENT_SLOT=$(${DOCKER_PREFIX} cardano-cli query tip ${CARDANO_NET_PREFIX} ${NODE_SOCKET_PREFIX} | jq -r '.slot')
 EXPIRE=$((CURRENT_SLOT+300))
 
+echo "Sending [${RECEIVER_AMOUNT_TO_RECEIVE}] ${SENDER_PATH} -> ${RECEIVER_PATH} || CHANGE ${SENDER_AMOUNT_TO_RECEIVE}"
+
 # Build raw transaction again with correct amounts
 ${DOCKER_PREFIX} cardano-cli transaction build-raw \
     ${tx_inputs} \
