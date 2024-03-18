@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 DOCKER_RELAY_CONTAINER=$(docker ps --format "{{.Names}}" --filter "name=apex-relay")
-DOCKER_PREFIX="docker exec -it ${DOCKER_RELAY_CONTAINER}"
+DOCKER_PREFIX="docker exec ${DOCKER_RELAY_CONTAINER}"
 
 TEST_DIR=test-data
 TX_DIR=tx
@@ -83,8 +83,6 @@ RECEIVER_AMOUNT_TO_RECEIVE=${AMOUNT}
 CURRENT_SLOT=$(${DOCKER_PREFIX} cardano-cli query tip ${CARDANO_NET_PREFIX} ${NODE_SOCKET_PREFIX} | jq -r '.slot')
 EXPIRE=$((CURRENT_SLOT+300))
 
-echo "Sending [${RECEIVER_AMOUNT_TO_RECEIVE}] ${SENDER_PATH} -> ${RECEIVER_PATH} || CHANGE ${SENDER_AMOUNT_TO_RECEIVE}"
-
 # Build raw transaction again with correct amounts
 ${DOCKER_PREFIX} cardano-cli transaction build-raw \
     ${tx_inputs} \
@@ -100,7 +98,9 @@ ${DOCKER_PREFIX} cardano-cli transaction sign \
     --out-file ${TX_FILE}.signed \
     ${CARDANO_NET_PREFIX}
 
-echo "$(${DOCKER_PREFIX} cardano-cli transaction submit \
+echo "Sending [${RECEIVER_AMOUNT_TO_RECEIVE}] ${SENDER_PATH} -> ${RECEIVER_PATH} || CHANGE ${SENDER_AMOUNT_TO_RECEIVE}"
+
+echo $(${DOCKER_PREFIX} cardano-cli transaction submit \
     ${NODE_SOCKET_PREFIX} \
     --tx-file ${TX_FILE}.signed \
-    ${CARDANO_NET_PREFIX})"
+    ${CARDANO_NET_PREFIX})

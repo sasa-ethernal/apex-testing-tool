@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 DOCKER_RELAY_CONTAINER=$(docker ps --format "{{.Names}}" --filter "name=apex-relay")
-DOCKER_PREFIX="docker exec -it ${DOCKER_RELAY_CONTAINER}"
+DOCKER_PREFIX="docker exec ${DOCKER_RELAY_CONTAINER}"
 
 TEST_DIR=test-data
 TX_DIR=tx

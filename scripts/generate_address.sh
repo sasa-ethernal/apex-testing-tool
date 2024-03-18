@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 DOCKER_RELAY_CONTAINER=$(docker ps --format "{{.Names}}" --filter "name=apex-relay")
-DOCKER_PREFIX="docker exec -it ${DOCKER_RELAY_CONTAINER}"
+DOCKER_PREFIX="docker exec ${DOCKER_RELAY_CONTAINER}"
 
 TEST_DIR=test-data
 VUS_PREFIX=vus
@@ -21,17 +21,18 @@ fi
 VUS_DIR=${VUS_PREFIX}-${VUS_ID}
 WALLET_NAME=${WALLET_PREFIX}-${WALLET_ID}
 
-mkdir -p ${TEST_DIR} && cd ${TEST_DIR} && mkdir -p ${VUS_DIR}
+mkdir -p ${TEST_DIR} && cd ${TEST_DIR} && mkdir -p ${VUS_DIR} && cd ..
+
+WALLET_FILE=${TEST_DIR}/${VUS_DIR}/${WALLET_NAME}
 
 # Generate address
 ${DOCKER_PREFIX} cardano-cli address key-gen \
-    --verification-key-file ${TEST_DIR}/${VUS_DIR}/${WALLET_NAME}.vkey \
-    --signing-key-file ${TEST_DIR}/${VUS_DIR}/${WALLET_NAME}.skey
+    --verification-key-file ${WALLET_FILE}.vkey \
+    --signing-key-file ${WALLET_FILE}.skey
 
 ${DOCKER_PREFIX} cardano-cli address build \
-    --payment-verification-key-file ${TEST_DIR}/${VUS_DIR}/${WALLET_NAME}.vkey \
-    --out-file ${TEST_DIR}/${VUS_DIR}/${WALLET_NAME}.addr \
+    --payment-verification-key-file ${WALLET_FILE}.vkey \
+    --out-file ${WALLET_FILE}.addr \
     ${CARDANO_NET_PREFIX}
 
-
-echo "Generated address ${TEST_DIR}/${VUS_PREFIX}-${VUS_ID}/${WALLET_PREFIX}-${WALLET_ID} (.vkey|.skey|.addr)"
+echo "${WALLET_FILE}"
