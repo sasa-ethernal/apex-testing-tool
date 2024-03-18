@@ -3,9 +3,6 @@
 This docker compose file is starting following containers:
 
 * apex-relay (standalone, prerequisite for dbsync and wallet-api)
-* postgres (standalone, prerequisite for dbsync and blockfrost)
-* dbsync (requires apex-relay and postgres)
-* blockfrost (requires postgres and consequently dbsync to keep it up to date)
 * wallet-api (requires apex-relay)
 * icarus (requires wallet-api)
 * ogmios (requires apex-relay)
@@ -18,9 +15,6 @@ For detals consult the docker compose file but at the time of writing, the follo
 | Component  | Version      | Docker registry                      |
 |------------|--------------|--------------------------------------|
 | apex-relay |        8.7.3 | ghcr.io/intersectmbo/cardano-node    |
-| postgres   | 14.10-alpine | postgres                             |
-| dbsync     |     13.2.0.1 | ghcr.io/intersectmbo/cardano-db-sync |
-| blockfrost |       v1.7.0 | blockfrost/backend-ryo               |
 | wallet-api |   2023.12.18 | cardanofoundation/cardano-wallet     |
 | icarus     |  v2023-04-14 | piotrstachyra/icarus                 |
 | ogmios     |       v6.1.0 | cardanosolutions/ogmios              |
@@ -56,30 +50,6 @@ To check the tip (at the moment it is about 10 min to sync, will definitely vary
 docker exec -it vector2-testnet-tools-v3-apex-relay-1 cardano-cli query tip --testnet-magic 1177 --socket-path /ipc/node.socket
 ```
 
-
-## DbSync
-
-DbSync is indexer created as ETL tool coprised of three components:
-
-* running node relay (to track blockchain state)
-* dbsync etl tool (to react to block events, parse them and store them to postgres database)
-* postgres database
-
-Credentials to access the postgres database are in `secrets/dbsync/` folder.
-
-
-## Blockfrost
-
-Blockfrost is an instant, highly optimized and accessible API as a Service that serves as an alternative access
-to the Cardano blockchain and related networks, with extra features.
-
-For blockfrost api consult the [online documentation](https://docs.blockfrost.io/).
-To check the blockfrost point a browser to `localhost` port `3000`, for example:
-
-```
-http://localhost:3000
-http://localhost:3000/epochs/latest
-```
 
 ## Wallet API and Icarus
 
@@ -118,9 +88,6 @@ To remove containers and volumes, images will be left for fast restart:
 ```
 docker compose down
 docker volume rm \
-  vector2-testnet-tools-v3_db-sync-data \
   vector2-testnet-tools-v3_node-db \
-  vector2-testnet-tools-v3_node-ipc \
-  vector2-testnet-tools-v3_postgres \
   vector2-testnet-tools-v3_wallet-api-data
 ```
